@@ -35,6 +35,44 @@ As for the rest, the interface should be pretty straightforward. If you have a q
 ## How to build
 See [BUILD.md](./BUILD.md) for build instructions.
 
+## Google Drive save sync
+
+melonDS can optionally synchronize DS game save files (.sav) with your Google Drive, letting you
+continue your progress on another computer. When enabled, the latest save is downloaded when a
+game boots, and uploaded after each in-game save. Files are stored in a `melonDS` folder in your
+Drive (the app can only access files it created itself).
+
+If both the local and cloud copies changed since the last sync (for example, you played on two
+devices without syncing), melonDS asks which version to keep: local, cloud, or both (the cloud
+copy is preserved next to your save with a `.conflict` suffix).
+
+This feature is enabled by default and controlled by the CMake option `ENABLE_GOOGLE_DRIVE_SYNC`.
+
+### Setup
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project (or pick an
+   existing one) and enable the **Google Drive API**.
+2. Under *APIs & Services → OAuth consent screen*, configure the consent screen (External is fine
+   for personal use) and add yourself as a test user.
+3. Under *APIs & Services → Credentials*, create an **OAuth client ID** of type **Desktop app**.
+4. Paste the client ID and secret into your `melonDS.toml`:
+
+   ```toml
+   [CloudSync]
+   ClientID = "1234567890-abc.apps.googleusercontent.com"
+   ClientSecret = "GOCSPX-..."
+   ```
+
+   or paste them into the `kDefaultClientID` / `kDefaultClientSecret` constants in
+   `src/frontend/qt_sdl/CloudSyncManager.cpp` and rebuild.
+5. In melonDS: *Config → Interface settings → Google Drive → Sign in…*, then tick
+   *Sync saves with Google Drive* and press OK. A **Sync Now** button is available for manual
+   synchronization.
+
+Tokens are stored locally in `cloudsync.json` next to the melonDS config (permissions restricted
+on POSIX systems). Note that the OAuth client secret of a "Desktop app" client is not treated as
+confidential by Google; only sync saves with Drive accounts you trust.
+
 ## TODO LIST
 
  * better DSi emulation

@@ -172,6 +172,12 @@ void SaveManager::FlushSecondaryBuffer(u8* dst, u32 dstLength)
     // When flushing to memory, we don't know if dst already has any data so we only check that we CAN flush.
     if (dst && dstLength < SecondaryBufferLength) return;
 
+    bool flushedToFile = false;
+
+    // capture the path now: Path can be changed by SetPath() on the main
+    // thread while we work, and we report the path we actually flushed to
+    std::string flushPath = Path;
+
     SecondaryBufferLock->lock();
     if (dst)
     {
@@ -179,17 +185,21 @@ void SaveManager::FlushSecondaryBuffer(u8* dst, u32 dstLength)
     }
     else
     {
-        FileHandle* f = Platform::OpenFile(Path, FileMode::Write);
+        FileHandle* f = Platform::OpenFile(flushPath, FileMode::Write);
         if (f)
         {
             FileWrite(SecondaryBuffer.get(), SecondaryBufferLength, 1, f);
-            Log(LogLevel::Info, "SaveManager: Wrote %u bytes to %s\n", SecondaryBufferLength, Path.c_str());
+            Log(LogLevel::Info, "SaveManager: Wrote %u bytes to %s\n", SecondaryBufferLength, flushPath.c_str());
             CloseFile(f);
+            flushedToFile = true;
         }
     }
     PreviousFlushVersion = FlushVersion;
     TimeAtLastFlushRequest = 0;
     SecondaryBufferLock->unlock();
+
+    if (flushedToFile)
+        emit SaveFlushed(QString::fromStdString(flushPath));
 }
 
 bool SaveManager::NeedsFlush()

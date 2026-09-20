@@ -28,6 +28,9 @@
 #include "Window.h"
 #include "Config.h"
 #include "SaveManager.h"
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+#include "CloudSyncManager.h"
+#endif
 
 const int kMaxWindows = 4;
 
@@ -101,6 +104,10 @@ public:
 
     Config::Table& getGlobalConfig() { return globalCfg; }
     Config::Table& getLocalConfig() { return localCfg; }
+
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    CloudSyncManager* getCloudSync() { return cloudSync.get(); }
+#endif
 
     void broadcastCommand(int cmd, QVariant param = QVariant());
     void handleCommand(int cmd, QVariant& param);
@@ -296,6 +303,10 @@ public:
     std::unique_ptr<SaveManager> ndsSave;
     std::unique_ptr<SaveManager> gbaSave;
     std::unique_ptr<SaveManager> firmwareSave;
+
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    std::unique_ptr<CloudSyncManager> cloudSync;
+#endif
 
     bool doLimitFPS;
     double curFPS;

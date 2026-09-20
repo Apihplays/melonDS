@@ -28,6 +28,7 @@
 #include <memory>
 #include <QThread>
 #include <QMutex>
+#include <QString>
 
 #include "types.h"
 
@@ -35,6 +36,11 @@ class SaveManager : public QThread
 {
     Q_OBJECT
     void run() override;
+
+signals:
+    // Emitted (from the flush thread) after the save buffer
+    // was successfully flushed to the save file on disk.
+    void SaveFlushed(const QString& path);
 
 public:
     SaveManager(const std::string& path);

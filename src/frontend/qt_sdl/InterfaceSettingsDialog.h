@@ -70,6 +70,12 @@ private slots:
     void on_pbHalf_clicked();
     void on_pbQuarter_clicked();
 
+    void on_cbCloudSync_clicked();
+    void on_btnCloudSignIn_clicked();
+    void on_btnCloudSyncNow_clicked();
+
+    void updateCloudStatus();
+
 private:
     Ui::InterfaceSettingsDialog* ui;
 

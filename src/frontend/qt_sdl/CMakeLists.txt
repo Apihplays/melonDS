@@ -62,6 +62,11 @@ set(SOURCES_QT_SDL
     NetplayDialog.cpp
 )
 
+option(ENABLE_GOOGLE_DRIVE_SYNC "Enable Google Drive save sync" ON)
+if (ENABLE_GOOGLE_DRIVE_SYNC)
+    list(APPEND SOURCES_QT_SDL CloudSyncManager.cpp)
+endif()
+
 option(USE_QT6 "Use Qt 6 instead of Qt 5" ON)
 
 if (USE_QT6)
@@ -93,6 +98,10 @@ fix_interface_includes(PkgConfig::SDL2 PkgConfig::LibArchive)
 add_compile_definitions(ARCHIVE_SUPPORT_ENABLED)
 
 add_executable(melonDS ${SOURCES_QT_SDL})
+
+if (ENABLE_GOOGLE_DRIVE_SYNC)
+    target_compile_definitions(melonDS PRIVATE GOOGLE_DRIVE_SYNC_ENABLED)
+endif()
 
 add_subdirectory("../../net"
     ${CMAKE_BINARY_DIR}/net)

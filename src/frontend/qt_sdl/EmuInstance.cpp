@@ -141,6 +141,10 @@ EmuInstance::EmuInstance(int inst) : deleting(false),
     if (inst == 0) topWindow = nullptr;
     createWindow();
 
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    cloudSync = std::make_unique<CloudSyncManager>(this);
+#endif
+
     emuThread->start();
 
     // if any extra windows were saved as enabled, open them
@@ -1887,6 +1891,12 @@ bool EmuInstance::loadROM(QStringList filepath, bool reset, QString& errorstr)
     std::string origsav = savname;
     savname += instanceFileSuffix();
 
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    // pull the latest save from Google Drive before the game's save data
+    // is read, so play can continue seamlessly on another device
+    cloudSync->bootSync(QString::fromStdString(savname));
+#endif
+
     FileHandle* sav = Platform::OpenFile(savname, FileMode::Read);
     if (!sav)
     {
@@ -1969,6 +1979,11 @@ bool EmuInstance::loadROM(QStringList filepath, bool reset, QString& errorstr)
 
     cartType = 0;
     ndsSave = std::make_unique<SaveManager>(savname);
+
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    connect(ndsSave.get(), &SaveManager::SaveFlushed,
+            cloudSync.get(), &CloudSyncManager::onSaveFlushed);
+#endif
 
     return true; // success
 }

@@ -24,6 +24,9 @@
 #include "Platform.h"
 #include "Config.h"
 #include "main.h"
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+#include "CloudSyncManager.h"
+#endif
 
 InterfaceSettingsDialog* InterfaceSettingsDialog::currentDlg = nullptr;
 InterfaceSettingsDialog::InterfaceSettingsDialog(QWidget* parent) : QDialog(parent), ui(new Ui::InterfaceSettingsDialog)
@@ -43,6 +46,15 @@ InterfaceSettingsDialog::InterfaceSettingsDialog(QWidget* parent) : QDialog(pare
     ui->spinTargetFPS->setValue(cfg.GetDouble("TargetFPS"));
     ui->spinFFW->setValue(cfg.GetDouble("FastForwardFPS"));
     ui->spinSlow->setValue(cfg.GetDouble("SlowmoFPS"));
+
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    ui->cbCloudSync->setChecked(cfg.GetBool("CloudSync.Enabled"));
+    connect(emuInstance->getCloudSync(), &CloudSyncManager::signInChanged,
+            this, &InterfaceSettingsDialog::updateCloudStatus);
+    updateCloudStatus();
+#else
+    ui->gbCloudSync->setVisible(false);
+#endif
 
     const QList<QString> themeKeys = QStyleFactory::keys();
     const QString currentTheme = qApp->style()->objectName();
@@ -103,6 +115,45 @@ void InterfaceSettingsDialog::on_pbQuarter_clicked()
     ui->spinSlow->setValue(ui->spinTargetFPS->value() / 4.0);
 }
 
+void InterfaceSettingsDialog::on_cbCloudSync_clicked()
+{
+}
+
+void InterfaceSettingsDialog::on_btnCloudSignIn_clicked()
+{
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    CloudSyncManager* cloud = emuInstance->getCloudSync();
+
+    if (cloud->isSignedIn())
+        cloud->signOut();
+    else
+        cloud->signIn();
+
+    updateCloudStatus();
+#endif
+}
+
+void InterfaceSettingsDialog::on_btnCloudSyncNow_clicked()
+{
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    emuInstance->getCloudSync()->syncNow();
+#endif
+}
+
+void InterfaceSettingsDialog::updateCloudStatus()
+{
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    CloudSyncManager* cloud = emuInstance->getCloudSync();
+    bool signedIn = cloud->isSignedIn();
+
+    ui->lblCloudStatus->setText(signedIn ? tr("Status: signed in")
+                                         : tr("Status: not signed in"));
+    ui->btnCloudSignIn->setText(signedIn ? tr("Sign out")
+                                         : tr("Sign in..."));
+    ui->btnCloudSyncNow->setEnabled(signedIn);
+#endif
+}
+
 void InterfaceSettingsDialog::done(int r)
 {
     if (!((MainWindow*)parent())->getEmuInstance())
@@ -135,6 +186,10 @@ void InterfaceSettingsDialog::done(int r)
 
         QString themeName = ui->cbxUITheme->currentData().toString();
         cfg.SetQString("UITheme", themeName);
+
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+        cfg.SetBool("CloudSync.Enabled", ui->cbCloudSync->isChecked());
+#endif
 
         Config::Save();
 

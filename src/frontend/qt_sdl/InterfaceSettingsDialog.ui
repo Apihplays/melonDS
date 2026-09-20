@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Interface settings - melonDS</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SizeConstraint::SetFixedSize</enum>
    </property>
@@ -306,6 +306,50 @@
            </widget>
           </item>
          </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbCloudSync">
+     <property name="title">
+      <string>Google Drive</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutCloud">
+      <item>
+       <widget class="QCheckBox" name="cbCloudSync">
+        <property name="toolTip">
+         <string>Uploads the game save to Google Drive after each in-game save, and downloads the latest version when a game is started.</string>
+        </property>
+        <property name="text">
+         <string>Sync saves with Google Drive</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblCloudStatus">
+        <property name="text">
+         <string>Status: not signed in</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutCloud">
+        <item>
+         <widget class="QPushButton" name="btnCloudSignIn">
+          <property name="text">
+           <string>Sign in...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnCloudSyncNow">
+          <property name="text">
+           <string>Sync Now</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

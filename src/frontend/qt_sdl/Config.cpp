@@ -112,13 +112,16 @@ DefaultList<bool> DefaultBools =
 #endif
     {"DSi.DSP.HLE", true},
     {"Instance*.RTC.SyncToHost", true},
+    {"CloudSync.Enabled", false},
 };
 
 DefaultList<std::string> DefaultStrings =
 {
     {"DLDI.ImagePath",                  "dldi.bin"},
     {"DSi.SD.ImagePath",                "dsisd.bin"},
-    {"Instance*.Firmware.Username",     "melonDS"}
+    {"Instance*.Firmware.Username",     "melonDS"},
+    {"CloudSync.ClientID",              ""},
+    {"CloudSync.ClientSecret",          ""}
 };
 
 DefaultList<double> DefaultDoubles =
