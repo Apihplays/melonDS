@@ -375,7 +375,7 @@ void CloudSyncManager::startAuthServer()
             QByteArray req = sock->readAll();
             if (!req.contains("\r\n\r\n")) return; // wait for the full request
 
-            QString path = QString::fromLatin1(req.section(' ', 1, 1));
+            QString path = QString::fromLatin1(req).section(' ', 1, 1);
             QUrlQuery params(QUrl("http://localhost" + path).query());
 
             QByteArray resp =

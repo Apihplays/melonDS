@@ -29,6 +29,7 @@
 #include <fstream>
 
 #include <QDateTime>
+#include <QObject>
 
 #include <zstd.h>
 #ifdef ARCHIVE_SUPPORT_ENABLED
@@ -1981,8 +1982,8 @@ bool EmuInstance::loadROM(QStringList filepath, bool reset, QString& errorstr)
     ndsSave = std::make_unique<SaveManager>(savname);
 
 #ifdef GOOGLE_DRIVE_SYNC_ENABLED
-    connect(ndsSave.get(), &SaveManager::SaveFlushed,
-            cloudSync.get(), &CloudSyncManager::onSaveFlushed);
+    QObject::connect(ndsSave.get(), &SaveManager::SaveFlushed,
+                     cloudSync.get(), &CloudSyncManager::onSaveFlushed);
 #endif
 
     return true; // success

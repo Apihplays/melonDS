@@ -156,6 +156,7 @@ else()
         find_package(Wayland REQUIRED Client)
 
         target_compile_definitions(melonDS PRIVATE WAYLAND_ENABLED)
+        target_include_directories(melonDS PRIVATE "${Wayland_INCLUDE_DIRS}")
 
         target_sources(melonDS PRIVATE
             ../duckstation/gl/context_egl_wayland.cpp
