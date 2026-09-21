@@ -90,8 +90,6 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
                           const QString& method, const QUrl& url,
                           const QByteArray& contentType, const QByteArray& data)
 {
-    printf("[CloudSync] %s %s\n", method.toUtf8().constData(), url.toString().toUtf8().constData());
-    fflush(stdout);
     QNetworkRequest req(url);
     if (!token.isEmpty())
         req.setRawHeader("Authorization", "Bearer " + token);
@@ -128,8 +126,6 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
 
     if (!timer.isActive())
     { // timed out
-        printf("[CloudSync] Request timed out!\n");
-        fflush(stdout);
         reply->abort();
     }
     timer.stop();
@@ -138,8 +134,6 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
     res.status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     res.body = reply->readAll();
     res.ok = (reply->error() == QNetworkReply::NoError) && (res.status >= 200) && (res.status < 300);
-    printf("[CloudSync] Done: status=%d ok=%d error=%s\n", res.status, (int)res.ok, reply->errorString().toUtf8().constData());
-    fflush(stdout);
     if (!res.ok)
     {
         res.error = reply->errorString();
@@ -715,14 +709,9 @@ void CloudSyncManager::resolveConflict(const QString& localPath, const QJsonObje
 
     if (allowUI && parentWindow())
     {
-        printf("[CloudSync] Prompting conflict resolution on main thread\n");
-        fflush(stdout);
-        // Do not block the worker thread synchronously on Qt event queue if the main thread is waiting on it.
         // If caller is in background thread, choose KeepBoth safely to prevent GUI deadlock.
         if (QThread::currentThread() != parentWindow()->thread())
         {
-            printf("[CloudSync] Background thread conflict detected: auto-selecting KeepBoth (.conflict backup)\n");
-            fflush(stdout);
             choice = KeepBoth;
         }
         else
@@ -820,20 +809,8 @@ void CloudSyncManager::syncFile(const QString& localPath, bool allowUI)
     bool localChanged = (localMd5 != st["local_md5"].toString());
     bool cloudChanged = (cloud["md5Checksum"].toString() != st["cloud_md5"].toString());
 
-    printf("[CloudSync] localChanged=%d cloudChanged=%d localMd5=%s cloudMd5=%s stateLocal=%s stateCloud=%s\n",
-           localChanged, cloudChanged,
-           localMd5.toUtf8().constData(),
-           cloud["md5Checksum"].toString().toUtf8().constData(),
-           st["local_md5"].toString().toUtf8().constData(),
-           st["cloud_md5"].toString().toUtf8().constData());
-    fflush(stdout);
-
     if (localChanged && cloudChanged)
-    {
-        printf("[CloudSync] Entering resolveConflict\n");
-        fflush(stdout);
         resolveConflict(localPath, cloud, allowUI);
-    }
     else if (localChanged)
         uploadSave(localPath, cloud);
     else if (cloudChanged)
@@ -875,7 +852,6 @@ void CloudSyncManager::syncNow()
 
 void CloudSyncManager::reportStatus(const QString& msg, bool error)
 {
-    printf("%s\n", msg.toStdString().c_str());
     emit syncStatus(msg, error);
 
     if (emuInstance)
