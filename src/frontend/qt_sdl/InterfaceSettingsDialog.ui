@@ -317,24 +317,59 @@
      <property name="title">
       <string>Google Drive</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayoutCloud">
-      <item>
-       <widget class="QCheckBox" name="cbCloudSync">
-        <property name="toolTip">
-         <string>Uploads the game save to Google Drive after each in-game save, and downloads the latest version when a game is started.</string>
-        </property>
-        <property name="text">
-         <string>Sync saves with Google Drive</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblCloudStatus">
-        <property name="text">
-         <string>Status: not signed in</string>
-        </property>
-       </widget>
-      </item>
+      <layout class="QVBoxLayout" name="verticalLayoutCloud">
+       <item>
+        <widget class="QCheckBox" name="cbCloudSync">
+         <property name="toolTip">
+          <string>Uploads the game save to Google Drive after each in-game save, and downloads the latest version when a game is started.</string>
+         </property>
+         <property name="text">
+          <string>Sync saves with Google Drive</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="formLayoutCloudCredentials">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lblCloudClientID">
+           <property name="text">
+            <string>Client ID:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="txtCloudClientID">
+           <property name="placeholderText">
+            <string>OAuth 2.0 Client ID (ends with .apps.googleusercontent.com)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="lblCloudClientSecret">
+           <property name="text">
+            <string>Client Secret:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="txtCloudClientSecret">
+           <property name="echoMode">
+            <enum>QLineEdit::EchoMode::PasswordEchoOnEdit</enum>
+           </property>
+           <property name="placeholderText">
+            <string>OAuth 2.0 Client Secret</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblCloudStatus">
+         <property name="text">
+          <string>Status: not signed in</string>
+         </property>
+        </widget>
+       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayoutCloud">
         <item>
