@@ -33,6 +33,7 @@
 #include <QMessageBox>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QBuffer>
 #include <QNetworkRequest>
 #include <QPushButton>
 #include <QRandomGenerator>
@@ -89,6 +90,8 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
                           const QString& method, const QUrl& url,
                           const QByteArray& contentType, const QByteArray& data)
 {
+    printf("[CloudSync] %s %s\n", method.toUtf8().constData(), url.toString().toUtf8().constData());
+    fflush(stdout);
     QNetworkRequest req(url);
     if (!token.isEmpty())
         req.setRawHeader("Authorization", "Bearer " + token);
@@ -102,6 +105,14 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
         reply = nam->post(req, data);
     else if (method == "PUT")
         reply = nam->put(req, data);
+    else if (method == "PATCH")
+    {
+        QBuffer* buf = new QBuffer();
+        buf->setData(data);
+        buf->open(QIODevice::ReadOnly);
+        reply = nam->sendCustomRequest(req, "PATCH", buf);
+        buf->setParent(reply);
+    }
     else if (method == "DELETE")
         reply = nam->deleteResource(req);
     else
@@ -117,6 +128,8 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
 
     if (!timer.isActive())
     { // timed out
+        printf("[CloudSync] Request timed out!\n");
+        fflush(stdout);
         reply->abort();
     }
     timer.stop();
@@ -125,6 +138,8 @@ HttpResult performRequest(QNetworkAccessManager* nam, const QByteArray& token,
     res.status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     res.body = reply->readAll();
     res.ok = (reply->error() == QNetworkReply::NoError) && (res.status >= 200) && (res.status < 300);
+    printf("[CloudSync] Done: status=%d ok=%d error=%s\n", res.status, (int)res.ok, reply->errorString().toUtf8().constData());
+    fflush(stdout);
     if (!res.ok)
     {
         res.error = reply->errorString();
@@ -590,7 +605,7 @@ bool CloudSyncManager::uploadSave(const QString& localPath, const QJsonObject& c
         QUrlQuery q;
         q.addQueryItem("uploadType", "media");
         url.setQuery(q);
-        res = performRequest(nam, accessToken.toUtf8(), "PUT", url,
+        res = performRequest(nam, accessToken.toUtf8(), "PATCH", url,
                              "application/octet-stream", data);
     }
     else
@@ -689,22 +704,35 @@ void CloudSyncManager::resolveConflict(const QString& localPath, const QJsonObje
 
     if (allowUI && parentWindow())
     {
-        QMessageBox box(parentWindow());
-        box.setWindowTitle("melonDS - Google Drive sync");
-        box.setIcon(QMessageBox::Warning);
-        box.setText(tr("The save file %1 was modified both here and on another device.\n\n"
-                       "Which version do you want to keep?")
-                        .arg(QFileInfo(localPath).fileName()));
-        QPushButton* keepLocal = box.addButton(tr("Keep local"), QMessageBox::AcceptRole);
-        QPushButton* keepCloud = box.addButton(tr("Keep cloud"), QMessageBox::DestructiveRole);
-        QPushButton* keepBoth = box.addButton(tr("Keep both"), QMessageBox::ActionRole);
-        box.addButton(QMessageBox::Cancel);
-        box.exec();
+        printf("[CloudSync] Prompting conflict resolution on main thread\n");
+        fflush(stdout);
+        // Do not block the worker thread synchronously on Qt event queue if the main thread is waiting on it.
+        // If caller is in background thread, choose KeepBoth safely to prevent GUI deadlock.
+        if (QThread::currentThread() != parentWindow()->thread())
+        {
+            printf("[CloudSync] Background thread conflict detected: auto-selecting KeepBoth (.conflict backup)\n");
+            fflush(stdout);
+            choice = KeepBoth;
+        }
+        else
+        {
+            QMessageBox box(parentWindow());
+            box.setWindowTitle("melonDS - Google Drive sync");
+            box.setIcon(QMessageBox::Warning);
+            box.setText(tr("The save file %1 was modified both here and on another device.\n\n"
+                           "Which version do you want to keep?")
+                            .arg(QFileInfo(localPath).fileName()));
+            QPushButton* keepLocal = box.addButton(tr("Keep local"), QMessageBox::AcceptRole);
+            QPushButton* keepCloud = box.addButton(tr("Keep cloud"), QMessageBox::DestructiveRole);
+            QPushButton* keepBoth = box.addButton(tr("Keep both"), QMessageBox::ActionRole);
+            box.addButton(QMessageBox::Cancel);
+            box.exec();
 
-        if (box.clickedButton() == keepLocal) choice = KeepLocal;
-        else if (box.clickedButton() == keepCloud) choice = KeepCloud;
-        else if (box.clickedButton() == keepBoth) choice = KeepBoth;
-        else choice = Cancel;
+            if (box.clickedButton() == keepLocal) choice = KeepLocal;
+            else if (box.clickedButton() == keepCloud) choice = KeepCloud;
+            else if (box.clickedButton() == keepBoth) choice = KeepBoth;
+            else choice = Cancel;
+        }
     }
 
     switch (choice)
@@ -781,8 +809,20 @@ void CloudSyncManager::syncFile(const QString& localPath, bool allowUI)
     bool localChanged = (localMd5 != st["local_md5"].toString());
     bool cloudChanged = (cloud["md5Checksum"].toString() != st["cloud_md5"].toString());
 
+    printf("[CloudSync] localChanged=%d cloudChanged=%d localMd5=%s cloudMd5=%s stateLocal=%s stateCloud=%s\n",
+           localChanged, cloudChanged,
+           localMd5.toUtf8().constData(),
+           cloud["md5Checksum"].toString().toUtf8().constData(),
+           st["local_md5"].toString().toUtf8().constData(),
+           st["cloud_md5"].toString().toUtf8().constData());
+    fflush(stdout);
+
     if (localChanged && cloudChanged)
+    {
+        printf("[CloudSync] Entering resolveConflict\n");
+        fflush(stdout);
         resolveConflict(localPath, cloud, allowUI);
+    }
     else if (localChanged)
         uploadSave(localPath, cloud);
     else if (cloudChanged)

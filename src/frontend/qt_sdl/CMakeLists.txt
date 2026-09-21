@@ -226,7 +226,7 @@ if (WIN32)
 
 
     target_link_libraries(melonDS PRIVATE ws2_32 iphlpapi)
-    set_target_properties(melonDS PROPERTIES WIN32_EXECUTABLE $<IF:$<CONFIG:Debug>,OFF,ON>)
+    set_target_properties(melonDS PROPERTIES WIN32_EXECUTABLE OFF)
 
     if (MINGW)
         configure_file("${CMAKE_SOURCE_DIR}/res/xp.manifest.in" "${CMAKE_BINARY_DIR}/res/xp.manifest")
