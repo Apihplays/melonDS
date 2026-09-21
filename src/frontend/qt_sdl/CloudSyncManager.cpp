@@ -674,6 +674,17 @@ bool CloudSyncManager::downloadSave(const QJsonObject& cloudFile, const QString&
     QString md5 = QString::fromLatin1(
         QCryptographicHash::hash(res.body, QCryptographicHash::Md5).toHex());
 
+    // create a timestamped local backup of the existing save before replacing it
+    if (QFile::exists(localPath))
+    {
+        QString backupDir = QFileInfo(localPath).absolutePath() + "/save_backups";
+        QDir().mkpath(backupDir);
+        QString timeStamp = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
+        QString backupPath = QString("%1/%2.%3.bak")
+                                .arg(backupDir, QFileInfo(localPath).fileName(), timeStamp);
+        QFile::copy(localPath, backupPath);
+    }
+
     // write atomically so a failed download can't clobber the local save
     QSaveFile f(localPath);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)
