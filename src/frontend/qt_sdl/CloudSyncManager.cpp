@@ -171,10 +171,9 @@ QString fileMd5(const QString& path)
     if (!f.open(QIODevice::ReadOnly)) return QString();
 
     QCryptographicHash hash(QCryptographicHash::Md5);
-    char buf[65536];
-    qint64 n;
-    while ((n = f.read(buf, sizeof(buf))) > 0)
-        hash.addData(QByteArrayView(buf, n));
+    // addData(QIODevice*) reads the whole file in chunks; available since Qt 5.0,
+    // unlike the QByteArrayView overload which requires Qt 6.5+
+    if (!hash.addData(&f)) return QString();
 
     return QString::fromLatin1(hash.result().toHex());
 }
