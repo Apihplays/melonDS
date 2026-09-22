@@ -174,7 +174,7 @@ QString fileMd5(const QString& path)
     char buf[65536];
     qint64 n;
     while ((n = f.read(buf, sizeof(buf))) > 0)
-        hash.addData(buf, n);
+        hash.addData(QByteArrayView(buf, n));
 
     return QString::fromLatin1(hash.result().toHex());
 }
