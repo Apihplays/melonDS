@@ -76,14 +76,16 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Download zip artifacts
+    - name: Download x86_64 zip artifacts
       uses: actions/download-artifact@v7
       with:
-        pattern: melonDS-windows-*-zip
+        pattern: melonDS-windows-x86_64-zip
         merge-multiple: true
         path: dist
     - name: Create GitHub Release
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
-      run: gh release create "$GITHUB_REF_NAME" --generate-notes dist/*
+      run: |
+        gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME" 2>/dev/null || true
+        gh release upload "$GITHUB_REF_NAME" --clobber dist/*

@@ -5,6 +5,8 @@ on:
     branches:
       - master
       - ci/*
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - master
@@ -64,3 +66,25 @@ jobs:
         name: melonDS-appimage-${{ matrix.arch.name }}
         path: melonDS*.AppImage
         archive: false
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download x86_64 AppImage artifact
+      uses: actions/download-artifact@v7
+      with:
+        pattern: melonDS-x86_64.AppImage
+        merge-multiple: true
+        path: dist
+    - name: Upload to release (create if missing)
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        mv dist/melonDS-x86_64.AppImage dist/melonDS-linux-x86_64.AppImage
+        gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME" 2>/dev/null || true
+        gh release upload "$GITHUB_REF_NAME" --clobber dist/*
