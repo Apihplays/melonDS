@@ -53,8 +53,35 @@ jobs:
       with:
         name: melonDS-windows-${{ matrix.arch.name }}
         path: .\build\release-windows-${{ matrix.arch.name }}\melonDS.exe
+    - name: Zip standalone exe (nightly-style)
+      shell: pwsh
+      run: Compress-Archive -Path .\build\release-windows-${{ matrix.arch.name }}\melonDS.exe -DestinationPath .\melonDS-windows-${{ matrix.arch.name }}.zip -Force
+    - name: Upload zip artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: melonDS-windows-${{ matrix.arch.name }}-zip
+        path: .\melonDS-windows-${{ matrix.arch.name }}.zip
     - name: Save vcpkg cache
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
         key: vcpkg-${{ matrix.arch.name }}-windows-${{ hashFiles('vcpkg.json') }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download zip artifacts
+      uses: actions/download-artifact@v7
+      with:
+        pattern: melonDS-windows-*-zip
+        merge-multiple: true
+        path: dist
+    - name: Create GitHub Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release create "$GITHUB_REF_NAME" --generate-notes dist/*
