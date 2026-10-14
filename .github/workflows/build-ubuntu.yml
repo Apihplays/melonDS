@@ -44,7 +44,7 @@ jobs:
       run: |
         cmake --build build
         DESTDIR=AppDir cmake --install build
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@v4
       with:
         name: melonDS-ubuntu-${{ matrix.arch.name }}
         path: AppDir/usr/bin/melonDS
@@ -60,11 +60,10 @@ jobs:
         QMAKE: /usr/lib/qt6/bin/qmake
       run: |
         ./linuxdeploy-${{ matrix.arch.name }}.AppImage --appdir AppDir --plugin qt --output appimage
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@v4
       with:
         name: melonDS-${{ matrix.arch.name }}.AppImage
         path: melonDS*.AppImage
-        archive: false
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -74,16 +73,15 @@ jobs:
       contents: write
     steps:
     - name: Download x86_64 AppImage artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v4
       with:
-        pattern: melonDS-x86_64.AppImage
-        merge-multiple: true
+        name: melonDS-x86_64.AppImage
         path: dist
     - name: Upload to release (create if missing)
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
-        mv dist/melonDS-x86_64.AppImage dist/melonDS-linux-x86_64.AppImage
+        find dist -type f -name "*.AppImage" -exec mv {} dist/melonDS-linux-x86_64.AppImage \;
         gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME" 2>/dev/null || true
         gh release upload "$GITHUB_REF_NAME" --clobber dist/*

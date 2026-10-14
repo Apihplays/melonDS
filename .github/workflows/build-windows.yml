@@ -51,7 +51,7 @@ jobs:
         configurePreset: release-windows-${{ matrix.arch.name }}
         configurePresetAdditionalArgs: "['-DENABLE_DEBUG_DEPS=OFF', '-DMELONDS_EMBED_BUILD_INFO=ON']"
         buildPreset: release-windows-${{ matrix.arch.name }}
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@v4
       with:
         name: melonDS-windows-${{ matrix.arch.name }}
         path: .\build\release-windows-${{ matrix.arch.name }}\melonDS.exe
@@ -59,7 +59,7 @@ jobs:
       shell: pwsh
       run: Compress-Archive -Path .\build\release-windows-${{ matrix.arch.name }}\melonDS.exe -DestinationPath .\melonDS-windows-${{ matrix.arch.name }}.zip -Force
     - name: Upload zip artifact
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       with:
         name: melonDS-windows-${{ matrix.arch.name }}-zip
         path: .\melonDS-windows-${{ matrix.arch.name }}.zip
@@ -77,10 +77,9 @@ jobs:
       contents: write
     steps:
     - name: Download x86_64 zip artifacts
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v4
       with:
-        pattern: melonDS-windows-x86_64-zip
-        merge-multiple: true
+        name: melonDS-windows-x86_64-zip
         path: dist
     - name: Create GitHub Release
       env:
