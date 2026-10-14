@@ -62,7 +62,7 @@ jobs:
         ./linuxdeploy-${{ matrix.arch.name }}.AppImage --appdir AppDir --plugin qt --output appimage
     - uses: actions/upload-artifact@v7
       with:
-        name: melonDS-appimage-${{ matrix.arch.name }}
+        name: melonDS-${{ matrix.arch.name }}.AppImage
         path: melonDS*.AppImage
         archive: false
 
