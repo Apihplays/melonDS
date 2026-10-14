@@ -71,6 +71,7 @@ private slots:
     void on_pbQuarter_clicked();
 
     void on_cbCloudSync_clicked();
+    void on_cbCustomCredentials_toggled(bool checked);
     void on_btnCloudSignIn_clicked();
     void on_btnCloudSyncNow_clicked();
 

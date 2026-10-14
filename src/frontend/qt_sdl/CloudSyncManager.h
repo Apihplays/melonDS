@@ -39,6 +39,7 @@ public:
 
     bool isSignedIn() const;
     bool autoSyncEnabled() const;
+    bool hasCustomCredentials() const;
 
     // Pulls the latest version of the given save file from Google Drive
     // before a game boots. Blocks until done (bounded by timeouts), so the

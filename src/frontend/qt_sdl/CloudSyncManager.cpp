@@ -216,6 +216,12 @@ QWidget* CloudSyncManager::parentWindow() const
     return emuInstance ? emuInstance->getMainWindow() : nullptr;
 }
 
+bool CloudSyncManager::hasCustomCredentials() const
+{
+    QString id = emuInstance->getGlobalConfig().GetQString("CloudSync.ClientID");
+    return !id.isEmpty();
+}
+
 QString CloudSyncManager::clientID() const
 {
     QString id = emuInstance->getGlobalConfig().GetQString("CloudSync.ClientID");
@@ -289,7 +295,9 @@ bool CloudSyncManager::refreshAccessToken()
 {
     QUrlQuery body;
     body.addQueryItem("client_id", clientID());
-    body.addQueryItem("client_secret", clientSecret());
+    QString secret = clientSecret();
+    if (!secret.isEmpty())
+        body.addQueryItem("client_secret", secret);
     body.addQueryItem("refresh_token", refreshToken);
     body.addQueryItem("grant_type", "refresh_token");
 
@@ -319,15 +327,13 @@ void CloudSyncManager::signIn()
     }
     if (authInProgress) return;
 
-    if (clientID().isEmpty() || clientSecret().isEmpty())
+    if (clientID().isEmpty())
     {
         QMessageBox::warning(parentWindow(), "melonDS",
             "No Google OAuth client ID is configured.\n\n"
-            "Create a \"Desktop app\" OAuth client in the Google Cloud Console, "
-            "then paste the client ID and secret into the CloudSync.ClientID and "
-            "CloudSync.ClientSecret entries in melonDS.toml (or into "
-            "CloudSyncManager.cpp). See README.md for details.");
-        reportStatus("Google Drive: no OAuth client ID configured. See README.md.", true);
+            "Configure a Client ID in Interface Settings -> Google Drive -> Advanced "
+            "or set CloudSync.ClientID in melonDS.toml.");
+        reportStatus("Google Drive: no OAuth client ID configured.", true);
         return;
     }
 
@@ -447,7 +453,9 @@ void CloudSyncManager::finishAuth(const QString& code)
     QUrlQuery body;
     body.addQueryItem("code", code);
     body.addQueryItem("client_id", clientID());
-    body.addQueryItem("client_secret", clientSecret());
+    QString secret = clientSecret();
+    if (!secret.isEmpty())
+        body.addQueryItem("client_secret", secret);
     body.addQueryItem("redirect_uri", authRedirectUri);
     body.addQueryItem("grant_type", "authorization_code");
     body.addQueryItem("code_verifier", authVerifier);

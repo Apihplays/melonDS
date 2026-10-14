@@ -49,8 +49,15 @@ InterfaceSettingsDialog::InterfaceSettingsDialog(QWidget* parent) : QDialog(pare
 
 #ifdef GOOGLE_DRIVE_SYNC_ENABLED
     ui->cbCloudSync->setChecked(cfg.GetBool("CloudSync.Enabled"));
-    ui->txtCloudClientID->setText(cfg.GetQString("CloudSync.ClientID"));
-    ui->txtCloudClientSecret->setText(cfg.GetQString("CloudSync.ClientSecret"));
+    QString clientID = cfg.GetQString("CloudSync.ClientID");
+    QString clientSecret = cfg.GetQString("CloudSync.ClientSecret");
+    ui->txtCloudClientID->setText(clientID);
+    ui->txtCloudClientSecret->setText(clientSecret);
+
+    bool hasCustom = !clientID.isEmpty() || !clientSecret.isEmpty();
+    ui->cbCustomCredentials->setChecked(hasCustom);
+    ui->wgtCustomCredentials->setVisible(hasCustom);
+
     connect(emuInstance->getCloudSync(), &CloudSyncManager::signInChanged,
             this, &InterfaceSettingsDialog::updateCloudStatus);
     updateCloudStatus();
@@ -121,6 +128,13 @@ void InterfaceSettingsDialog::on_cbCloudSync_clicked()
 {
 }
 
+void InterfaceSettingsDialog::on_cbCustomCredentials_toggled(bool checked)
+{
+#ifdef GOOGLE_DRIVE_SYNC_ENABLED
+    ui->wgtCustomCredentials->setVisible(checked);
+#endif
+}
+
 void InterfaceSettingsDialog::on_btnCloudSignIn_clicked()
 {
 #ifdef GOOGLE_DRIVE_SYNC_ENABLED
@@ -133,8 +147,16 @@ void InterfaceSettingsDialog::on_btnCloudSignIn_clicked()
     else
     {
         auto& cfg = emuInstance->getGlobalConfig();
-        cfg.SetQString("CloudSync.ClientID", ui->txtCloudClientID->text().trimmed());
-        cfg.SetQString("CloudSync.ClientSecret", ui->txtCloudClientSecret->text().trimmed());
+        if (ui->cbCustomCredentials->isChecked())
+        {
+            cfg.SetQString("CloudSync.ClientID", ui->txtCloudClientID->text().trimmed());
+            cfg.SetQString("CloudSync.ClientSecret", ui->txtCloudClientSecret->text().trimmed());
+        }
+        else
+        {
+            cfg.SetQString("CloudSync.ClientID", "");
+            cfg.SetQString("CloudSync.ClientSecret", "");
+        }
         Config::Save();
         cloud->signIn();
     }
@@ -199,8 +221,16 @@ void InterfaceSettingsDialog::done(int r)
 
 #ifdef GOOGLE_DRIVE_SYNC_ENABLED
         cfg.SetBool("CloudSync.Enabled", ui->cbCloudSync->isChecked());
-        cfg.SetQString("CloudSync.ClientID", ui->txtCloudClientID->text().trimmed());
-        cfg.SetQString("CloudSync.ClientSecret", ui->txtCloudClientSecret->text().trimmed());
+        if (ui->cbCustomCredentials->isChecked())
+        {
+            cfg.SetQString("CloudSync.ClientID", ui->txtCloudClientID->text().trimmed());
+            cfg.SetQString("CloudSync.ClientSecret", ui->txtCloudClientSecret->text().trimmed());
+        }
+        else
+        {
+            cfg.SetQString("CloudSync.ClientID", "");
+            cfg.SetQString("CloudSync.ClientSecret", "");
+        }
 #endif
 
         Config::Save();
